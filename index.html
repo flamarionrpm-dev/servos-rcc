@@ -464,7 +464,6 @@ function openApp(){
   document.getElementById('hsub').textContent=CU.isAdm?'🔐 Administrador':'👤 '+CU.nome;
   if(CU.isAdm){document.getElementById('hdr').classList.add('adm');setAdmNav();}
   go('home');toast('Bem-vindo, '+CU.nome+'! 🙏');
-  setTimeout(()=>fbEscutar(),500);
   if(CU.isAdm) fbEscutar();
 }
 function doLogout(){
