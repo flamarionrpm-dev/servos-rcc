@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Servos RCC">
+<title>Servos RCC — Diocese</title>
+<style>
+:root{
+  --blue:#1565c0;--blue2:#1976d2;--blue-light:#e3f0ff;--blue-dark:#0d3f7a;
+  --green:#1a8a4a;--green-light:#e6f6ed;
+  --amber:#b87a00;--amber-light:#fdf3da;
+  --red:#c0392b;--red-light:#fdecea;
+  --purple:#6d28d9;--purple-light:#ede9fe;
+  --gray:#6b6b6b;--gray-light:#f4f4f5;--gray-border:#e0e0e0;
+  --text:#1a1a1a;--text2:#555;--text3:#888;
+  --white:#fff;--radius:14px;--radius-sm:9px;
+  --shadow:0 2px 10px rgba(0,0,0,.09);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;color:var(--text);background:#eef1f7;overscroll-behavior:none}
+.login-screen{position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 24px;background:linear-gradient(160deg,var(--blue-dark),var(--blue2))}
+.login-screen.hidden{display:none}
+.login-logo{height:56px;margin-bottom:20px;object-fit:contain}
+.login-title{font-size:22px;font-weight:800;color:#fff;text-align:center;margin-bottom:4px}
+.login-sub{font-size:13px;color:rgba(255,255,255,.75);text-align:center;margin-bottom:28px}
+.login-box{background:rgba(255,255,255,.13);border-radius:var(--radius);padding:24px 20px;width:100%;max-width:360px;backdrop-filter:blur(8px)}
+.lf label{font-size:12px;font-weight:700;color:rgba(255,255,255,.8);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em;margin-top:12px}
+.lf label:first-child{margin-top:0}
+.lf input{width:100%;padding:12px 14px;border-radius:var(--radius-sm);border:1.5px solid rgba(255,255,255,.25);background:rgba(255,255,255,.15);color:#fff;font-size:15px}
+.lf input::placeholder{color:rgba(255,255,255,.45)}
+.lf input:focus{outline:none;border-color:rgba(255,255,255,.7);background:rgba(255,255,255,.22)}
+.login-btn{width:100%;padding:13px;border-radius:var(--radius-sm);border:none;background:#fff;color:var(--blue-dark);font-size:15px;font-weight:800;cursor:pointer;margin-top:16px}
+.login-btn:active{opacity:.85}
+.login-err{color:rgba(255,180,180,.95);font-size:13px;text-align:center;margin-top:10px;min-height:18px;font-weight:600}
+.login-hint{color:rgba(255,255,255,.55);font-size:12px;text-align:center;margin-top:16px;line-height:1.6}
+.login-hint strong{color:rgba(255,255,255,.85)}
+.app{display:flex;flex-direction:column;height:100vh;max-width:480px;margin:0 auto;background:#eef1f7}
+.header{background:linear-gradient(135deg,var(--blue-dark),var(--blue2));color:#fff;padding:0 14px;height:58px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;box-shadow:0 3px 12px rgba(13,63,122,.35)}
+.header.adm{background:linear-gradient(135deg,#3b0764,var(--purple))!important}
+.header.sim{background:linear-gradient(135deg,#065f46,#059669)!important}
+.hlogo{display:flex;align-items:center;background:rgba(255,255,255,.15);border-radius:10px;padding:4px 8px;height:42px;flex-shrink:0}
+.hlogo img{height:34px;width:auto;object-fit:contain}
+.htitle{font-size:15px;font-weight:700;flex:1;line-height:1.2}
+.hsub{font-size:10px;opacity:.72;font-weight:400}
+.hback{background:rgba(255,255,255,.18);border:none;border-radius:8px;color:#fff;padding:6px 10px;font-size:13px;cursor:pointer;font-weight:500}
+.hout{background:rgba(255,255,255,.18);border:none;border-radius:8px;color:#fff;padding:6px 10px;font-size:12px;cursor:pointer;font-weight:600;flex-shrink:0}
+.bnav{background:var(--white);border-top:1px solid var(--gray-border);display:flex;position:sticky;bottom:0;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.06)}
+.nb{flex:1;border:none;background:none;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:var(--text3);font-size:10px;font-weight:500}
+.nb.on{color:var(--blue)}
+.anav .nb.on{color:var(--purple)}
+.snav .nb.on{color:var(--green)}
+.nb svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.scr{display:none;flex:1;overflow-y:auto;padding:16px}
+.scr.on{display:block}
+.card{background:var(--white);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card.pb{border-left:4px solid var(--purple)}
+.card.gb{border-left:4px solid var(--green)}
+.ctitle{font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.ctitle svg{width:18px;height:18px;stroke:var(--blue);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stat{background:var(--white);border-radius:var(--radius-sm);padding:14px;text-align:center;box-shadow:var(--shadow)}
+.snum{font-size:28px;font-weight:800;color:var(--blue);line-height:1}
+.slbl{font-size:11px;color:var(--text3);margin-top:4px;line-height:1.3}
+.stat.g .snum{color:var(--green)}
+.stat.a .snum{color:var(--amber)}
+.fld{margin-bottom:14px}
+.fld label{font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.otag{font-size:10px;font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0;margin-left:3px}
+.fld input,.fld select{width:100%;padding:12px 14px;border:1.5px solid var(--gray-border);border-radius:var(--radius-sm);font-size:15px;color:var(--text);background:var(--white);appearance:none;-webkit-appearance:none}
+.fld input:focus,.fld select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(21,101,192,.12)}
+.ckg{display:flex;flex-direction:column;gap:4px}
+.cki{display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:var(--radius-sm);border:1.5px solid var(--gray-border);background:var(--white);cursor:pointer;transition:border-color .15s,background .15s}
+.cki.on{border-color:var(--blue);background:var(--blue-light)}
+.cki input[type=checkbox]{width:18px;height:18px;accent-color:var(--blue);cursor:pointer;flex-shrink:0}
+.cki span{font-size:14px;color:var(--text);flex:1;line-height:1.3}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:var(--radius-sm);border:none;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .15s,transform .1s}
+.btn:active{transform:scale(.98)}
+.btn.pr{background:linear-gradient(135deg,var(--blue-dark),var(--blue2));color:#fff;box-shadow:0 4px 12px rgba(21,101,192,.3)}
+.btn.pu{background:linear-gradient(135deg,#3b0764,var(--purple));color:#fff}
+.btn.gr{background:linear-gradient(135deg,#065f46,#059669);color:#fff}
+.btn.se{background:var(--gray-light);color:var(--text2)}
+.btn.da{background:var(--red-light);color:var(--red)}
+.bsm{padding:8px 13px;font-size:13px;border-radius:var(--radius-sm);border:1.5px solid var(--gray-border);background:var(--white);color:var(--text2);cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-weight:600}
+.bsm.bl{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
+.bsm.rd{border-color:var(--red);color:var(--red);background:var(--red-light)}
+.bsm.gn{border-color:var(--green);color:var(--green);background:var(--green-light)}
+.bsm.pu{border-color:var(--purple);color:var(--purple);background:var(--purple-light)}
+.bdg{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.bdg.gn{background:var(--green-light);color:var(--green)}
+.bdg.am{background:var(--amber-light);color:var(--amber)}
+.bdg.gy{background:var(--gray-light);color:var(--gray)}
+.bdg.bl{background:var(--blue-light);color:var(--blue)}
+.bdg.pu{background:var(--purple-light);color:var(--purple)}
+.bdg.rd{background:var(--red-light);color:var(--red)}
+.si{background:var(--white);border-radius:var(--radius);padding:13px 14px;margin-bottom:10px;box-shadow:var(--shadow);cursor:pointer;transition:transform .1s}
+.si:active{transform:scale(.99)}
+.sirow{display:flex;align-items:center;gap:11px}
+.av{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--blue-dark),var(--blue2));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0}
+.av.pu{background:linear-gradient(135deg,#3b0764,var(--purple))}
+.av.gy{background:var(--gray)}
+.siname{font-weight:700;font-size:15px;line-height:1.2}
+.sisub{font-size:12px;color:var(--text3);margin-top:2px}
+.sib{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.fb{display:inline-block;padding:3px 9px;border-radius:10px;font-size:11px;font-weight:700}
+.fb.ok{background:var(--green-light);color:var(--green)}
+.fb.no{background:#f0f0f0;color:#bbb}
+.pbar{height:8px;background:#e4e4e4;border-radius:4px;overflow:hidden;margin-top:4px}
+.pfill{height:100%;background:var(--blue);border-radius:4px;transition:width .4s}
+.pfill.gn{background:var(--green)}
+.pfill.am{background:var(--amber)}
+.plbl{display:flex;justify-content:space-between;font-size:12px;color:var(--text3);margin-bottom:3px}
+.dh{background:linear-gradient(135deg,var(--blue-dark),var(--blue2));color:#fff;padding:22px 16px 18px;border-radius:var(--radius) var(--radius) 0 0;margin:-16px -16px 16px}
+.dav{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:24px;margin-bottom:10px}
+.dname{font-size:20px;font-weight:800}
+.dsub{font-size:13px;opacity:.8;margin-top:3px}
+.irow{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-border)}
+.irow:last-child{border-bottom:none}
+.ilbl{font-size:12px;color:var(--text3);width:110px;flex-shrink:0;padding-top:1px}
+.ival{font-size:14px;color:var(--text);flex:1}
+.sec{font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin:16px 0 8px}
+.toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a1a;color:#fff;padding:11px 22px;border-radius:22px;font-size:14px;font-weight:600;opacity:0;transition:opacity .25s,transform .25s;z-index:9999;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.25);max-width:90vw;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.sw{position:relative;margin-bottom:14px}
+.sw input{width:100%;padding:12px 14px 12px 40px;border:1.5px solid var(--gray-border);border-radius:var(--radius-sm);font-size:15px;background:var(--white);box-shadow:var(--shadow)}
+.sw svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;stroke:var(--text3);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.empty{text-align:center;padding:48px 20px;color:var(--text3)}
+.empty svg{width:52px;height:52px;stroke:var(--gray-border);fill:none;stroke-width:1.5;margin:0 auto 14px;display:block}
+.pills{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px;scrollbar-width:none}
+.pills::-webkit-scrollbar{display:none}
+.pill{flex-shrink:0;padding:7px 14px;border-radius:20px;border:1.5px solid var(--gray-border);background:var(--white);font-size:13px;color:var(--text2);cursor:pointer;font-weight:600;white-space:nowrap}
+.pill.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.mover{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:800;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.mover.on{opacity:1;pointer-events:all}
+.modal{background:var(--white);border-radius:var(--radius) var(--radius) 0 0;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;padding:20px 16px 36px;transform:translateY(40px);transition:transform .25s}
+.mover.on .modal{transform:translateY(0)}
+.mhandle{width:40px;height:4px;background:var(--gray-border);border-radius:2px;margin:0 auto 18px}
+.acc-blk{border:1.5px solid var(--gray-border);border-radius:var(--radius-sm);margin-bottom:8px;overflow:hidden}
+.acc-hdr{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:var(--gray-light);font-size:14px;font-weight:700;color:var(--text);user-select:none}
+.acc-hdr.on{background:var(--blue-light);color:var(--blue)}
+.acc-hdr .chev{transition:transform .2s;font-size:14px;color:var(--text3)}
+.acc-bd{display:none;padding:8px 10px 10px;background:var(--white)}
+.acc-bd.on{display:block}
+.acnt{font-size:11px;font-weight:700;background:var(--blue);color:#fff;border-radius:10px;padding:1px 7px;margin-left:6px}
+.iline{display:flex;gap:8px;align-items:stretch}
+.iline input{flex:1;padding:11px 13px;border:1.5px solid var(--gray-border);border-radius:var(--radius-sm);font-size:15px}
+.iline input:focus{outline:none;border-color:var(--blue)}
+.cc{background:var(--white);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow);border-left:4px solid var(--blue)}
+.cc.off{border-left-color:var(--gray)}
+.simbar{display:none;position:fixed;top:58px;left:50%;transform:translateX(-50%);z-index:90;background:#059669;color:#fff;font-size:12px;font-weight:700;padding:5px 16px;border-radius:0 0 10px 10px;width:100%;max-width:480px;text-align:center}
+.simbar.on{display:block}
+.stcard{background:var(--white);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow);border-left:4px solid var(--green)}
+.stnum{display:inline-flex;width:26px;height:26px;border-radius:50%;background:var(--green);color:#fff;font-size:13px;font-weight:800;align-items:center;justify-content:center;margin-right:8px;flex-shrink:0}
+.stttl{font-weight:700;font-size:14px;color:var(--text);display:flex;align-items:center}
+.stbdy{font-size:13px;color:var(--text3);margin-top:8px;line-height:1.6;padding-left:34px}
+.sttip{background:var(--amber-light);color:var(--amber);border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;font-weight:600;margin-top:8px;margin-left:34px}
+.pwdbox{background:var(--gray-light);border:2px dashed var(--gray-border);border-radius:var(--radius-sm);padding:14px 16px;font-family:monospace;font-size:20px;letter-spacing:3px;font-weight:700;color:var(--blue-dark);text-align:center;margin:10px 0;user-select:all;cursor:copy}
+.atabs{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+.atabs::-webkit-scrollbar{display:none}
+@media(min-width:500px){.app{border-left:1px solid #d0d5de;border-right:1px solid #d0d5de}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="ls">
+  <img src="https://rccbrasil.org.br/wp-content/uploads/2022/06/logo_horizontal.png" class="login-logo" alt="RCC" onerror="this.style.display='none'">
+  <div class="login-title">Servos RCC — Diocese</div>
+  <div class="login-sub">Renovação Carismática Católica<br>Faça login para continuar</div>
+  <div class="login-box">
+    <div class="lf">
+      <label>Usuário</label>
+      <input id="lu" type="text" placeholder="Seu usuário" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('lp').focus()">
+      <label>Senha</label>
+      <input id="lp" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="login-err" id="lerr"></div>
+  </div>
+  <div class="login-hint">Esqueceu a senha? <strong>Solicite ao administrador da diocese.</strong></div>
+</div>
+
+<!-- MODAL -->
+<div class="mover" id="mover" onclick="closeMod(event)">
+  <div class="modal"><div class="mhandle"></div><div id="mbody"></div></div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="simbar" id="simbar">🎓 MODO SIMULAÇÃO — nenhum dado será salvo</div>
+
+<!-- APP -->
+<div class="app" id="app" style="display:none">
+  <div class="header" id="hdr">
+    <div class="hlogo">
+      <img src="https://rccbrasil.org.br/wp-content/uploads/2022/06/logo_horizontal.png" alt="RCC" onerror="this.parentElement.innerHTML='<span style=\'font-weight:900;font-size:12px;color:#fff\'>RCC<br><span style=\'font-size:9px;opacity:.8\'>BRASIL</span></span>'">
+    </div>
+    <div style="flex:1"><div class="htitle" id="htitle">Servos — Diocese</div><div class="hsub" id="hsub"></div></div>
+    <button class="hback" id="hback" style="display:none" onclick="goBack()">← Voltar</button>
+    <button class="hout" onclick="doLogout()">Sair</button>
+  </div>
+
+  <!-- HOME -->
+  <div class="scr on" id="scr-home">
+    <div style="padding:4px 0 12px">
+      <div style="font-size:21px;font-weight:800">Painel da Diocese 🔥</div>
+      <div style="font-size:13px;color:var(--text3);margin-top:2px" id="hlabel"></div>
+    </div>
+    <div class="sgrid" id="hstats"></div>
+    <div class="card"><div class="ctitle"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Formação base</div><div id="hform"></div></div>
+    <div class="card"><div class="ctitle"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Por ministério</div><div id="hmin"></div></div>
+  </div>
+
+  <!-- SERVOS -->
+  <div class="scr" id="scr-servos">
+    <div class="sw"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="search" id="sq" placeholder="Buscar nome, cidade ou grupo..." oninput="renderServos()">
+    </div>
+    <div class="pills" id="fpills"></div>
+    <div id="slist"></div>
+  </div>
+
+  <!-- CADASTRO -->
+  <div class="scr" id="scr-cadastro">
+    <div id="simbanner" style="display:none;background:linear-gradient(135deg,#065f46,#059669);color:#fff;padding:12px 16px;border-radius:var(--radius);margin-bottom:14px;align-items:center;gap:10px">
+      <span style="font-size:20px">🎓</span><div><div style="font-weight:800;font-size:14px">Modo Simulação</div><div style="font-size:12px;opacity:.85">Nenhum dado será salvo</div></div>
+    </div>
+    <div class="card">
+      <div class="ctitle"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Dados pessoais</div>
+      <div class="fld"><label>Nome completo *</label><input id="fn" type="text" placeholder="Nome do servo"></div>
+      <div class="fld"><label>Data de nascimento *</label><input id="fnasc" type="date"></div>
+      <div class="fld"><label>Telefone <span class="otag">(opcional)</span></label><input id="ftel" type="tel" placeholder="(00) 00000-0000"></div>
+      <div class="fld"><label>E-mail <span class="otag">(opcional)</span></label><input id="femail" type="email" placeholder="email@exemplo.com"></div>
+    </div>
+    <div class="card">
+      <div class="ctitle"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Cidade e grupo</div>
+      <div class="fld"><label>Cidade *</label>
+        <div class="iline"><select id="fcid" onchange="updateGrps()"></select><button class="bsm bl" onclick="mNewCid()">+ Nova</button></div>
+      </div>
+      <div class="fld"><label>Grupo de oração *</label>
+        <div class="iline"><select id="fgrp"></select><button class="bsm bl" onclick="mNewGrp()">+ Novo</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctitle"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Ministérios</div>
+      <div class="ckg" id="fmins"></div>
+    </div>
+    <div class="card">
+      <div class="ctitle"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Formação na RCC</div>
+      <div class="sec" style="margin-top:0">Fase Querygmática</div>
+      <div class="ckg">
+        <label class="cki" id="ci-sve"><input type="checkbox" id="fsve" onchange="ck('ci-sve',this)"><span>Seminário de Vida no Espírito (SVE)</span></label>
+        <label class="cki" id="ci-exp"><input type="checkbox" id="fexp" onchange="ck('ci-exp',this)"><span>Experiência de Oração</span></label>
+        <label class="cki" id="ci-int"><input type="checkbox" id="fint" onchange="ck('ci-int',this)"><span>Introdução aos Dons</span></label>
+      </div>
+      <div class="sec">Fase Catequética</div>
+      <div class="ckg">
+        <label class="cki" id="ci-mod"><input type="checkbox" id="fmod" onchange="ck('ci-mod',this)"><span>Módulo Básico</span></label>
+      </div>
+      <div class="sec">Formações específicas por ministério</div>
+      <p style="font-size:12px;color:var(--text3);margin-bottom:10px">Toque no ministério para expandir:</p>
+      <div id="facc"></div>
+    </div>
+    <div id="fedit" style="display:none;background:var(--amber-light);color:var(--amber);padding:11px 14px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:12px;font-weight:600"></div>
+    <button class="btn pr" id="bsave" onclick="saveServo()">
+      <svg width="18" height="18" viewBox="0 0 24 24" stroke="#fff" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Salvar servo
+    </button>
+    <div style="height:8px"></div>
+    <button class="btn se" onclick="clearForm()">Limpar formulário</button>
+    <div style="height:20px"></div>
+  </div>
+
+  <!-- ADMIN -->
+  <div class="scr" id="scr-admin">
+    <div style="background:linear-gradient(135deg,#3b0764,var(--purple));color:#fff;padding:14px 16px;border-radius:var(--radius);margin-bottom:14px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 14px rgba(109,40,217,.3)">
+      <span style="font-size:24px">🔐</span>
+      <div><div style="font-weight:800;font-size:15px">Painel do Administrador</div><div style="font-size:12px;opacity:.85">Controle total da diocese</div></div>
+    </div>
+    <div class="atabs">
+      <button class="pill on" id="at-c" onclick="atab('c')">👥 Coordenadores</button>
+      <button class="pill" id="at-s" onclick="atab('s')">🧑 Servos</button>
+      <button class="pill" id="at-ci" onclick="atab('ci')">📍 Cidades</button>
+      <button class="pill" id="at-r" onclick="atab('r')">📊 Relatório</button>
+    </div>
+    <div id="acoords"></div>
+    <div id="aservos" style="display:none"></div>
+    <div id="acidades" style="display:none"></div>
+    <div id="arelat" style="display:none"></div>
+    <div style="height:20px"></div>
+  </div>
+
+  <!-- SIMULAÇÃO -->
+  <div class="scr" id="scr-sim">
+    <div style="background:linear-gradient(135deg,#065f46,#059669);color:#fff;padding:14px 16px;border-radius:var(--radius);margin-bottom:14px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:24px">🎓</span>
+      <div style="flex:1"><div style="font-weight:800;font-size:15px">Modo Simulação / Treinamento</div><div style="font-size:12px;opacity:.85">Ensine os coordenadores a usar o sistema</div></div>
+      <button onclick="stopSim()" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">Sair</button>
+    </div>
+    <div class="sec" style="margin-top:0">Guia passo a passo</div>
+    <div class="stcard"><div class="stttl"><span class="stnum">1</span>Acesse o link e faça login</div><div class="stbdy">O coordenador abre o link no celular ou computador, digita o <strong>usuário</strong> e <strong>senha inicial</strong> fornecidos pelo administrador.</div><div class="sttip">⚠️ Na primeira vez use a senha recebida. Para trocar, solicite ao administrador.</div></div>
+    <div class="stcard"><div class="stttl"><span class="stnum">2</span>Toque em "Cadastrar"</div><div class="stbdy">No menu inferior toque em <strong>Cadastrar</strong> para abrir o formulário de novo servo.</div></div>
+    <div class="stcard"><div class="stttl"><span class="stnum">3</span>Preencha os dados pessoais</div><div class="stbdy">Digite <strong>nome completo</strong> e <strong>data de nascimento</strong> (obrigatórios). Telefone e e-mail são opcionais.</div><div class="sttip">⚠️ Sem nome e data o sistema não salva.</div></div>
+    <div class="stcard"><div class="stttl"><span class="stnum">4</span>Selecione cidade e grupo</div><div class="stbdy">Escolha a cidade. Se não existir, toque em <strong>+ Nova</strong>. Depois selecione o grupo ou crie com <strong>+ Novo</strong>.</div></div>
+    <div class="stcard"><div class="stttl"><span class="stnum">5</span>Marque os ministérios</div><div class="stbdy">Marque todos os ministérios que o servo integra. Pode marcar mais de um ao mesmo tempo.</div></div>
+    <div class="stcard"><div class="stttl"><span class="stnum">6</span>Registre as formações</div><div class="stbdy">Marque as formações da <strong>Fase Querygmática</strong> (SVE, Exp. de Oração, Introd. aos Dons) e <strong>Módulo Básico</strong>. Para formações específicas toque no ministério para expandir a lista.</div><div class="sttip">💡 Um número aparece no ministério quando há formações marcadas.</div></div>
+    <div class="stcard"><div class="stttl"><span class="stnum">7</span>Salve o cadastro</div><div class="stbdy">Toque em <strong>Salvar servo</strong>. O administrador verá o cadastro imediatamente no painel de relatórios.</div></div>
+    <div class="sec">Pratique agora em modo seguro</div>
+    <div class="card gb">
+      <p style="font-size:13px;color:var(--text3);margin-bottom:12px;line-height:1.6">O formulário funciona normalmente mas <strong style="color:var(--green)">nenhum dado é salvo</strong>. Ideal para treinar sem risco.</p>
+      <button class="btn gr" onclick="startSimForm()">✏️ Abrir formulário de prática</button>
+    </div>
+    <div style="height:20px"></div>
+  </div>
+
+  <!-- MAIS -->
+  <div class="scr" id="scr-mais">
+    <div class="sec" style="margin-top:0">Cidades e grupos</div>
+    <div id="mcids"></div>
+    <div class="sec">Exportar</div>
+    <div class="card">
+      <div class="ctitle"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Baixar lista de servos</div>
+      <p style="font-size:13px;color:var(--text3);margin-bottom:12px">Exporte seus servos cadastrados em CSV (abre em Excel / Google Planilhas).</p>
+      <button class="btn se" onclick="exportCSV(false,null)">📥 Baixar CSV</button>
+    </div>
+    <div class="sec">Sobre</div>
+    <div class="card">
+      <img src="https://rccbrasil.org.br/wp-content/uploads/2022/06/logo_horizontal.png" style="height:36px;margin-bottom:10px" alt="RCC" onerror="this.style.display='none'">
+      <p style="font-size:13px;color:var(--text3);line-height:1.7"><strong style="color:var(--text)">Servos RCC — Diocese · v3.0</strong><br>Sistema com login por coordenador.<br>📲 Compartilhe o link ou envie o arquivo HTML pelo WhatsApp.</p>
+    </div>
+    <div style="height:20px"></div>
+  </div>
+
+  <!-- DETALHE -->
+  <div class="scr" id="scr-det"></div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bnav" id="bnav">
+    <button class="nb on" onclick="go('home')" id="nb-home">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Painel
+    </button>
+    <button class="nb" onclick="go('servos')" id="nb-servos">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Servos
+    </button>
+    <button class="nb" onclick="go('cadastro')" id="nb-cadastro">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="16" y1="11" x2="22" y2="11"/></svg>Cadastrar
+    </button>
+    <button class="nb" onclick="go('mais')" id="nb-mais">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>Mais
+    </button>
+  </nav>
+</div>
+<script>
+const AU='admin', AP='RCC@Diocese2025';
+const MINS=[
+  {id:'musica',n:'Ministério de Música'},
+  {id:'pregacao',n:'Ministério de Pregação'},
+  {id:'jovem',n:'Ministério Jovem'},
+  {id:'intercecao',n:'Ministério de Intercessão'},
+  {id:'humana',n:'Promoção Humana'},
+  {id:'comunicacao',n:'Ministério de Comunicação'},
+  {id:'infantil',n:'Ministério Infantil'},
+  {id:'formacao',n:'Ministério de Formação'},
+  {id:'curalibert',n:'Oração por Cura e Libertação'},
+];
+const FMIN={
+  musica:['Apostila 01','Apostila 02','Oficina'],
+  pregacao:['Apostila 01','Apostila 02','Oficina'],
+  formacao:['Apostila 01','Apostila 02','Apostila 03','Oficina'],
+  intercecao:['Apostila 01','Apostila 02','Apostila 03'],
+  jovem:['Kenosis','Kairos','Diakonia','Metanoia','Rock'],
+  infantil:['Apostila 01'],
+  humana:['Apostila 01'],
+  comunicacao:[],
+  curalibert:['Apostila 01','Apostila 02','Apostila 03'],
+};
+function ld(){
+  try{return{
+    coords:JSON.parse(localStorage.getItem('rcc_coords')||'null')||[{id:'coord1',nome:'Coordenador Exemplo',usuario:'coordenador',senha:'RCC@1234',cidade:'Rio Pardo de Minas',ativo:true,ts:Date.now()}],
+    cids:JSON.parse(localStorage.getItem('rcc_cids')||'null')||[{id:'c1',nome:'Rio Pardo de Minas',grupos:['Grupo Chama Viva','Grupo Ruah']},{id:'c2',nome:'Taiobeiras',grupos:['Grupo Shekinah']},{id:'c3',nome:'Salinas',grupos:['Grupo Ágape']}],
+    servos:JSON.parse(localStorage.getItem('rcc_servos')||'[]'),
+  };}catch(e){return{coords:[],cids:[],servos:[]}}
+}
+// ── URL do Google Apps Script (cole sua URL aqui após publicar) ──
+const GAS_URL='https://script.google.com/macros/s/AKfycbzspPlrb1PErDsR5WMhJKTLaBGsdpkwgWYxvpIbM2Pr5tKmZarrHc9cbt0_NPigQ6cl/exec';
+
+function sv(){
+  localStorage.setItem('rcc_coords',JSON.stringify(S.coords));
+  localStorage.setItem('rcc_cids',JSON.stringify(S.cids));
+  localStorage.setItem('rcc_servos',JSON.stringify(S.servos));
+}
+
+function enviarServoGAS(servo,coUser){
+  if(!GAS_URL||GAS_URL==='SUA_URL_AQUI')return;
+  const payload={tipo:'servo',id:servo.id,nome:servo.nome,nasc:servo.nasc,
+    cidade:nCid(servo.cid),grp:servo.grp||'',
+    mins:(servo.mins||[]).map(m=>nMin(m)),
+    sve:servo.sve,exp:servo.exp,int:servo.int,mod:servo.mod,
+    esps:servo.esps||[],tel:servo.tel||'',email:servo.email||'',
+    coNome:servo.coNome||'',coUser:coUser||servo.coId||'',ts:servo.ts||Date.now()};
+  fetch(GAS_URL,{method:'POST',mode:'no-cors',body:JSON.stringify(payload)})
+    .catch(()=>console.warn('Sem conexão — salvo localmente.'));
+}
+
+function excluirServoGAS(id){
+  if(!GAS_URL||GAS_URL==='SUA_URL_AQUI')return;
+  fetch(GAS_URL,{method:'POST',mode:'no-cors',body:JSON.stringify({tipo:'excluir_servo',id})})
+    .catch(()=>{});
+}
+
+function enviarCoordGAS(coord){
+  if(!GAS_URL||GAS_URL==='SUA_URL_AQUI')return;
+  fetch(GAS_URL,{method:'POST',mode:'no-cors',
+    body:JSON.stringify({tipo:'coordenador',...coord,
+      totalServos:S.servos.filter(s=>s.coId===coord.id).length})})
+    .catch(()=>{});
+}
+let S=ld(),CU=null,editId=null,curScr='home',fMin='',simOn=false,curAdmTab='c';
+const nCid=id=>(S.cids.find(c=>c.id===id)||{nome:'—'}).nome;
+const nMin=id=>(MINS.find(m=>m.id===id)||{n:id}).n;
+const inits=n=>n.trim().split(/\s+/).slice(0,2).map(x=>x[0]).toUpperCase().join('');
+const uid=()=>'s'+Date.now()+Math.random().toString(36).slice(2,5);
+const cuid=()=>'c'+Date.now();
+const couid=()=>'co'+Date.now();
+const fsc=s=>[s.sve,s.exp,s.int,s.mod].filter(Boolean).length;
+const fmtD=d=>{if(!d)return'—';const[y,m,dd]=d.split('-');return`${dd}/${m}/${y}`};
+const fmtTS=t=>{const d=new Date(t);return`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`};
+const ageS=n=>n?Math.floor((Date.now()-new Date(n))/31557600000)+' anos':'—';
+function genPwd(){const c='abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789@#!';let s='';for(let i=0;i<8;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
+function toast(m,d=2600){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),d);}
+
+// LOGIN
+function doLogin(){
+  const u=document.getElementById('lu').value.trim(),p=document.getElementById('lp').value;
+  const e=document.getElementById('lerr');e.textContent='';
+  if(!u||!p){e.textContent='Preencha usuário e senha.';return}
+  if(u===AU&&p===AP){CU={u:'admin',nome:'Administrador',isAdm:true};openApp();return}
+  const co=S.coords.find(c=>c.usuario===u&&c.senha===p);
+  if(co&&!co.ativo){e.textContent='Conta desativada. Contate o administrador.';return}
+  if(co){CU={u:co.usuario,nome:co.nome,isAdm:false,cid:co.id};openApp();return}
+  e.textContent='Usuário ou senha incorretos.';
+}
+function openApp(){
+  document.getElementById('ls').classList.add('hidden');
+  document.getElementById('app').style.display='flex';
+  document.getElementById('hsub').textContent=CU.isAdm?'🔐 Administrador':'👤 '+CU.nome;
+  if(CU.isAdm){document.getElementById('hdr').classList.add('adm');setAdmNav();}
+  go('home');toast('Bem-vindo, '+CU.nome+'! 🙏');
+}
+function doLogout(){
+  CU=null;simOn=false;
+  document.getElementById('app').style.display='none';
+  document.getElementById('ls').classList.remove('hidden');
+  document.getElementById('lu').value='';document.getElementById('lp').value='';document.getElementById('lerr').textContent='';
+  document.getElementById('hdr').classList.remove('adm','sim');
+  document.getElementById('simbar').classList.remove('on');
+  resetNav();
+}
+
+// NAV
+function setAdmNav(){
+  const n=document.getElementById('bnav');n.classList.add('anav');
+  n.innerHTML=`<button class="nb" onclick="go('home')" id="nb-home"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Painel</button>
+  <button class="nb" onclick="go('servos')" id="nb-servos"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Servos</button>
+  <button class="nb on" onclick="go('admin')" id="nb-admin"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Admin</button>
+  <button class="nb" onclick="go('sim')" id="nb-sim"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Simulação</button>`;
+}
+function resetNav(){
+  const n=document.getElementById('bnav');n.classList.remove('anav','snav');
+  n.innerHTML=`<button class="nb on" onclick="go('home')" id="nb-home"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Painel</button>
+  <button class="nb" onclick="go('servos')" id="nb-servos"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Servos</button>
+  <button class="nb" onclick="go('cadastro')" id="nb-cadastro"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="16" y1="11" x2="22" y2="11"/></svg>Cadastrar</button>
+  <button class="nb" onclick="go('mais')" id="nb-mais"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>Mais</button>`;
+}
+function go(s){
+  document.querySelectorAll('.scr').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('scr-'+s).classList.add('on');
+  const nb=document.getElementById('nb-'+s);if(nb)nb.classList.add('on');
+  document.getElementById('hback').style.display='none';
+  document.getElementById('bnav').style.display='flex';
+  curScr=s;
+  if(s==='home')rHome();
+  if(s==='servos'){fMin='';rServos();}
+  if(s==='cadastro')initForm();
+  if(s==='admin')atab('c');
+  if(s==='mais')rMais();
+}
+function goBack(){curScr==='det'?go('servos'):go('home');}
+
+// HOME
+function rHome(){
+  const lista=CU?.isAdm?S.servos:S.servos.filter(x=>x.coId===CU?.cid);
+  document.getElementById('hlabel').textContent=CU?.isAdm?'Visão geral de toda a diocese':'Seus cadastros — '+CU?.nome;
+  const t=lista.length,ok=lista.filter(s=>s.sve&&s.exp&&s.int&&s.mod).length;
+  document.getElementById('hstats').innerHTML=`
+    <div class="stat"><div class="snum">${t}</div><div class="slbl">${CU?.isAdm?'Servos na diocese':'Seus servos'}</div></div>
+    <div class="stat g"><div class="snum">${S.cids.length}</div><div class="slbl">Cidades</div></div>
+    <div class="stat"><div class="snum">${S.coords.filter(c=>c.ativo).length}</div><div class="slbl">Coordenadores ativos</div></div>
+    <div class="stat a"><div class="snum">${t?Math.round(ok/t*100):0}%</div><div class="slbl">Formação base completa</div></div>`;
+  const fs=[{l:'SVE',k:'sve'},{l:'Experiência de Oração',k:'exp'},{l:'Introdução aos Dons',k:'int'},{l:'Módulo Básico',k:'mod'}];
+  document.getElementById('hform').innerHTML=t
+    ?fs.map(f=>{const n=lista.filter(s=>s[f.k]).length,p=Math.round(n/t*100);
+      return`<div style="margin-bottom:11px"><div class="plbl"><span>${f.l}</span><span>${n}/${t}</span></div><div class="pbar"><div class="pfill${p>60?' gn':p>30?' ':' am'}" style="width:${p}%"></div></div></div>`;}).join('')
+    :'<p style="color:var(--text3);font-size:13px">Nenhum servo cadastrado ainda.</p>';
+  document.getElementById('hmin').innerHTML=MINS.map(m=>{
+    const n=lista.filter(s=>(s.mins||[]).includes(m.id)).length;
+    return`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--gray-border)"><span style="font-size:13px;color:var(--text2)">${m.n}</span><span class="bdg ${n?'bl':'gy'}">${n} servo${n!==1?'s':''}</span></div>`;}).join('');
+}
+
+// SERVOS LIST
+function rServos(){
+  const q=(document.getElementById('sq').value||'').toLowerCase().trim();
+  document.getElementById('fpills').innerHTML=`<div class="pill ${!fMin?'on':''}" onclick="setF('')">Todos</div>`+
+    MINS.map(m=>`<div class="pill ${fMin===m.id?'on':''}" onclick="setF('${m.id}')">${m.n}</div>`).join('');
+  const base=CU?.isAdm?S.servos:S.servos.filter(x=>x.coId===CU?.cid);
+  const list=base.filter(s=>{
+    if(q&&!s.nome.toLowerCase().includes(q)&&!nCid(s.cid).toLowerCase().includes(q)&&!(s.grp||'').toLowerCase().includes(q))return false;
+    if(fMin&&!(s.mins||[]).includes(fMin))return false;
+    return true;
+  });
+  const el=document.getElementById('slist');
+  if(!list.length){el.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><p>Nenhum servo encontrado.</p></div>`;return}
+  const coord=id=>S.coords.find(c=>c.id===id);
+  el.innerHTML=list.map(s=>{
+    const sc=fsc(s),co=coord(s.coId);
+    return`<div class="si" onclick="showDet('${s.id}')">
+      <div class="sirow"><div class="av">${inits(s.nome)}</div>
+        <div style="flex:1;min-width:0"><div class="siname">${s.nome}</div>
+          <div class="sisub">${nCid(s.cid)} · ${s.grp||'—'}${CU?.isAdm&&co?' · <span style="color:var(--purple);font-weight:600">'+co.nome+'</span>':''}</div>
+        </div><span class="bdg ${sc===4?'gn':sc>=2?'am':'gy'}">${sc}/4</span>
+      </div>
+      <div class="sib">${(s.mins||[]).slice(0,3).map(m=>`<span class="bdg bl" style="font-size:10px">${nMin(m)}</span>`).join('')}${(s.mins||[]).length>3?`<span class="bdg gy" style="font-size:10px">+${s.mins.length-3}</span>`:''}</div>
+    </div>`;}).join('');
+}
+function setF(v){fMin=v;rServos();}
+
+// FORM
+function initForm(){
+  const cs=document.getElementById('fcid');
+  cs.innerHTML='<option value="">Selecione a cidade</option>';
+  S.cids.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.nome;cs.appendChild(o)});
+  document.getElementById('fgrp').innerHTML='<option value="">Selecione o grupo</option>';
+  document.getElementById('fmins').innerHTML=MINS.map(m=>`<label class="cki" id="cm-${m.id}"><input type="checkbox" id="fm-${m.id}" value="${m.id}" onchange="ck('cm-${m.id}',this);rebAcc()"><span>${m.n}</span></label>`).join('');
+  buildAcc([],[]);
+  if(editId){
+    const s=S.servos.find(x=>x.id===editId);
+    if(s){
+      document.getElementById('fn').value=s.nome;
+      document.getElementById('fnasc').value=s.nasc;
+      document.getElementById('ftel').value=s.tel||'';
+      document.getElementById('femail').value=s.email||'';
+      cs.value=s.cid;updateGrps();
+      setTimeout(()=>{document.getElementById('fgrp').value=s.grp||''},40);
+      (s.mins||[]).forEach(id=>{const cb=document.getElementById('fm-'+id);if(cb){cb.checked=true;document.getElementById('cm-'+id).classList.add('on')}});
+      ['sve','exp','int','mod'].forEach(k=>{if(s[k]){document.getElementById('f'+k).checked=true;document.getElementById('ci-'+k).classList.add('on')}});
+      buildAcc(s.mins||[],s.esps||[]);
+      document.getElementById('fedit').style.display='block';
+      document.getElementById('fedit').textContent='✏️ Editando: '+s.nome;
+    }
+  } else {
+    ['fn','ftel','femail'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('fnasc').value='';
+    ['fsve','fexp','fint','fmod'].forEach(id=>document.getElementById(id).checked=false);
+    ['ci-sve','ci-exp','ci-int','ci-mod'].forEach(id=>document.getElementById(id).classList.remove('on'));
+    document.getElementById('fedit').style.display='none';
+  }
+  const sb=document.getElementById('simbanner'),btn=document.getElementById('bsave');
+  if(simOn){sb.style.display='flex';btn.className='btn gr';btn.textContent='🎓 Simular salvamento';}
+  else{sb.style.display='none';btn.className='btn pr';btn.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" stroke="#fff" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salvar servo';}
+}
+function buildAcc(ms,es){
+  document.getElementById('facc').innerHTML=MINS.map(m=>{
+    const fs=FMIN[m.id]||[],sel=ms.includes(m.id),cnt=es.filter(e=>fs.includes(e)).length;
+    return`<div class="acc-blk"><div class="acc-hdr ${sel?'on':''}" onclick="tAcc('${m.id}')"><span>${m.n}${cnt?`<span class="acnt">${cnt}</span>`:''}</span><span class="chev" id="chev-${m.id}">▾</span></div>
+    <div class="acc-bd" id="abdy-${m.id}"><div class="ckg" style="margin-top:4px">
+      ${fs.map((f,i)=>{const fid=`ef-${m.id}-${i}`,ck2=es.includes(f);
+        return`<label class="cki ${ck2?'on':''}" id="ci-${fid}"><input type="checkbox" id="${fid}" value="${f}" ${ck2?'checked':''} onchange="ck('ci-${fid}',this)"><span>${f}</span></label>`;}).join('')}
+    </div></div></div>`;}).join('');
+}
+function rebAcc(){buildAcc([...document.querySelectorAll('#fmins input:checked')].map(x=>x.value),[...document.querySelectorAll('#facc input:checked')].map(x=>x.value));}
+function tAcc(mid){const b=document.getElementById('abdy-'+mid),o=b.classList.toggle('on');document.getElementById('chev-'+mid).style.transform=o?'rotate(180deg)':'';}
+function ck(id,cb){document.getElementById(id)?.classList.toggle('on',cb.checked);}
+function updateGrps(){
+  const cid=document.getElementById('fcid').value,sel=document.getElementById('fgrp');
+  sel.innerHTML='<option value="">Selecione o grupo</option>';
+  (S.cids.find(c=>c.id===cid)||{grupos:[]}).grupos.forEach(g=>{const o=document.createElement('option');o.value=g;o.textContent=g;sel.appendChild(o)});
+}
+function mNewCid(){
+  openMod(`<h3 style="font-size:17px;font-weight:800;margin-bottom:14px">📍 Nova cidade</h3>
+    <div class="fld"><label>Nome *</label><input id="mc" type="text" placeholder="Ex: Salinas" style="width:100%;padding:12px 14px;border:1.5px solid var(--gray-border);border-radius:var(--radius-sm);font-size:15px"></div>
+    <button class="btn pr" onclick="saveCid()">Adicionar</button><div style="height:8px"></div><button class="btn se" onclick="closeMod()">Cancelar</button>`);
+  setTimeout(()=>document.getElementById('mc')?.focus(),200);
+}
+function saveCid(){
+  const n=document.getElementById('mc').value.trim();
+  if(!n){toast('⚠️ Informe o nome.');return}
+  if(S.cids.find(c=>c.nome.toLowerCase()===n.toLowerCase())){toast('Cidade já existe!');closeMod();return}
+  const nc={id:cuid(),nome:n,grupos:[]};S.cids.push(nc);if(!simOn)sv();
+  const s=document.getElementById('fcid'),o=document.createElement('option');o.value=nc.id;o.textContent=nc.nome;s.appendChild(o);s.value=nc.id;updateGrps();
+  closeMod();toast('✅ Cidade "'+n+'" adicionada!');
+}
+function mNewGrp(){
+  const cid=document.getElementById('fcid').value;
+  if(!cid){toast('⚠️ Selecione a cidade primeiro.');return}
+  const cidade=S.cids.find(c=>c.id===cid);
+  openMod(`<h3 style="font-size:17px;font-weight:800;margin-bottom:4px">🙏 Novo grupo</h3>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:14px">Cidade: <strong>${cidade.nome}</strong></p>
+    <div class="fld"><label>Nome *</label><input id="mg" type="text" placeholder="Ex: Grupo Chama Viva" style="width:100%;padding:12px 14px;border:1.5px solid var(--gray-border);border-radius:var(--radius-sm);font-size:15px"></div>
+    <button class="btn pr" onclick="saveGrp('${cid}')">Adicionar</button><div style="height:8px"></div><button class="btn se" onclick="closeMod()">Cancelar</button>`);
+  setTimeout(()=>document.getElementById('mg')?.focus(),200);
+}
+function saveGrp(cid){
+  const n=document.getElementById('mg').value.trim();
+  if(!n){toast('⚠️ Informe o nome.');return}
+  const c=S.cids.find(x=>x.id===cid);if(!c)return;
+  if(c.grupos.includes(n)){toast('Grupo já existe!');closeMod();return}
+  c.grupos.push(n);if(!simOn)sv();
+  const sel=document.getElementById('fgrp'),o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);sel.value=n;
+  closeMod();toast('✅ Grupo "'+n+'" adicionado!');
+}
+function saveServo(){
+  const nome=document.getElementById('fn').value.trim(),nasc=document.getElementById('fnasc').value,cid=document.getElementById('fcid').value,grp=document.getElementById('fgrp').value;
+  if(!nome||!nasc||!cid||!grp){toast('⚠️ Preencha nome, nascimento, cidade e grupo.');return}
+  if(simOn){toast('🎓 Perfeito! Em modo real o servo seria salvo agora.');clearForm();return}
+  const mins=[...document.querySelectorAll('#fmins input:checked')].map(x=>x.value);
+  const esps=[...document.querySelectorAll('#facc input:checked')].map(x=>x.value);
+  const servo={id:editId||uid(),nome,nasc,cid,grp,tel:document.getElementById('ftel').value,email:document.getElementById('femail').value,mins,sve:document.getElementById('fsve').checked,exp:document.getElementById('fexp').checked,int:document.getElementById('fint').checked,mod:document.getElementById('fmod').checked,esps,coId:CU?.cid||'admin',coNome:CU?.nome||'Administrador',ts:editId?(S.servos.find(x=>x.id===editId)||{}).ts||Date.now():Date.now(),tsUp:Date.now()};
+  if(editId){const i=S.servos.findIndex(x=>x.id===editId);if(i>=0)S.servos[i]=servo;editId=null;}
+  else S.servos.push(servo);
+  sv();
+  enviarServoGAS(servo,CU?.u||'');
+  toast('✅ Servo salvo!');clearForm();setTimeout(()=>go('servos'),500);
+}
+function clearForm(){
+  editId=null;
+  ['fn','ftel','femail'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fnasc').value='';document.getElementById('fcid').value='';
+  document.getElementById('fgrp').innerHTML='<option value="">Selecione o grupo</option>';
+  ['fsve','fexp','fint','fmod'].forEach(id=>document.getElementById(id).checked=false);
+  document.querySelectorAll('#fmins input').forEach(x=>x.checked=false);
+  document.querySelectorAll('.cki').forEach(x=>x.classList.remove('on'));
+  buildAcc([],[]);document.getElementById('fedit').style.display='none';
+}
+function editServo(id){editId=id;document.getElementById('bnav').style.display='flex';document.getElementById('hback').style.display='none';go('cadastro');}
+
+// DETALHE
+function showDet(id){
+  const s=S.servos.find(x=>x.id===id);if(!s)return;
+  const sc=fsc(s),co=S.coords.find(c=>c.id===s.coId);
+  const espH=MINS.map(m=>{const f=(s.esps||[]).filter(e=>(FMIN[m.id]||[]).includes(e));if(!f.length)return'';return`<div style="margin-bottom:10px"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:5px">${m.n}</div><div style="display:flex;flex-wrap:wrap;gap:5px">${f.map(x=>`<span class="bdg bl" style="font-size:10px">${x}</span>`).join('')}</div></div>`;}).join('');
+  document.getElementById('scr-det').innerHTML=`
+    <div class="dh"><div class="dav">${inits(s.nome)}</div><div class="dname">${s.nome}</div><div class="dsub">${nCid(s.cid)} · ${s.grp||'—'}</div></div>
+    <div class="card">
+      <div class="irow"><div class="ilbl">Nascimento</div><div class="ival">${fmtD(s.nasc)} (${ageS(s.nasc)})</div></div>
+      ${s.tel?`<div class="irow"><div class="ilbl">Telefone</div><div class="ival"><a href="tel:${s.tel}" style="color:var(--blue)">${s.tel}</a></div></div>`:''}
+      ${s.email?`<div class="irow"><div class="ilbl">E-mail</div><div class="ival">${s.email}</div></div>`:''}
+      ${CU?.isAdm&&co?`<div class="irow"><div class="ilbl">Cadastrado por</div><div class="ival"><span class="bdg pu">${co.nome}</span></div></div>`:''}
+      ${s.ts?`<div class="irow"><div class="ilbl">Data cadastro</div><div class="ival">${fmtTS(s.ts)}</div></div>`:''}
+    </div>
+    <div class="sec">Ministérios</div>
+    <div class="card"><div style="display:flex;flex-wrap:wrap;gap:6px">${s.mins.length?s.mins.map(m=>`<span class="bdg bl">${nMin(m)}</span>`).join(''):'<span style="color:var(--text3);font-size:13px">Nenhum</span>'}</div></div>
+    <div class="sec">Formação base</div>
+    <div class="card">
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px">
+        <span class="fb ${s.sve?'ok':'no'}">SVE</span><span class="fb ${s.exp?'ok':'no'}">Exp. Oração</span><span class="fb ${s.int?'ok':'no'}">Introd. Dons</span><span class="fb ${s.mod?'ok':'no'}">Módulo Básico</span>
+      </div>
+      <div class="plbl"><span>Progresso</span><span>${sc}/4</span></div>
+      <div class="pbar"><div class="pfill${sc===4?' gn':sc>=2?' ':' am'}" style="width:${sc*25}%"></div></div>
+    </div>
+    ${espH?`<div class="sec">Formações específicas</div><div class="card">${espH}</div>`:''}
+    <div style="display:flex;gap:10px;padding-bottom:16px">
+      <button class="bsm bl" style="flex:1;justify-content:center" onclick="editServo('${s.id}')">✏️ Editar</button>
+      <button class="bsm rd" style="flex:1;justify-content:center" onclick="cfmDelServo('${s.id}',false)">🗑 Excluir</button>
+    </div>`;
+  document.querySelectorAll('.scr').forEach(x=>x.classList.remove('on'));
+  document.getElementById('scr-det').classList.add('on');
+  document.getElementById('bnav').style.display='none';
+  document.getElementById('hback').style.display='flex';
+  curScr='det';
+}
+
+// ADMIN TABS
+function atab(t){
+  curAdmTab=t;
+  ['c','s','ci','r'].forEach(x=>{
+    document.getElementById('a'+{'c':'coords','s':'servos','ci':'cidades','r':'relat'}[x]).style.display=x===t?'block':'none';
+    document.getElementById('at-'+x)?.classList.toggle('on',x===t);
+  });
+  if(t==='c')rCoords();if(t==='s')rAServos();if(t==='ci')rACids();if(t==='r')rRelat();
+}
+
+// COORDENADORES
+function rCoords(){
+  const el=document.getElementById('acoords');
+  const hdr=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span style="font-weight:700;font-size:14px">Coordenadores</span><button class="bsm pu" onclick="mNewCoord()">+ Novo coordenador</button></div>`;
+  if(!S.coords.length){el.innerHTML=hdr+'<div class="empty"><p>Nenhum coordenador.</p></div>';return}
+  el.innerHTML=hdr+S.coords.map(c=>`
+    <div class="cc ${c.ativo?'':'off'}">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div class="av ${c.ativo?'':'gy'}">${inits(c.nome)}</div>
+        <div style="flex:1"><div style="font-weight:700;font-size:15px">${c.nome}</div><div style="font-size:12px;color:var(--text3)">@${c.usuario} · ${c.cidade||'—'}</div></div>
+        <span class="bdg ${c.ativo?'gn':'gy'}">${c.ativo?'Ativo':'Inativo'}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:10px">
+        Servos: <strong style="color:var(--text)">${S.servos.filter(s=>s.coId===c.id).length}</strong> · Criado: ${fmtTS(c.ts)}
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        <button class="bsm bl" onclick="mEditCoord('${c.id}')">✏️ Editar</button>
+        <button class="bsm pu" onclick="mResetPwd('${c.id}')">🔑 Nova senha</button>
+        <button class="bsm ${c.ativo?'rd':'gn'}" onclick="togCoord('${c.id}')">${c.ativo?'🚫 Desativar':'✅ Ativar'}</button>
+        <button class="bsm rd" onclick="cfmDelCoord('${c.id}')">🗑</button>
+      </div>
+    </div>`).join('');
+}
+function mNewCoord(){
+  const pwd=genPwd();
+  openMod(`<h3 style="font-size:17px;font-weight:800;margin-bottom:14px">👤 Novo coordenador</h3>
+    <div class="fld"><label>Nome completo *</label><input id="ncn" type="text" placeholder="Nome do coordenador" style="width:100%;padding:12px 14px;border:1.5px solid var(--gray-border);border-radius:var(--radius-sm);font-size:15px"></div>
+    <div class="fld"><label>Usuário (sem espaço) *</label><input id="ncu" type="text" placeholder="Ex: joao.silva" style="width:100%;padding:12px 14px;border:1.5px solid var(--gray-border);border-radius:var(--radius-sm);font-size:15px"></div>
+    <div class="fld"><label>Cidade / Região</label><input id="ncc" type="text" placeholder="Ex: Taiobeiras" style="width:100%;padding:12px 14px;border:1.5px solid var(--gray-border);border-radius:var(--radius-sm);font-size:15px"></div>
+    <div class="fld"><label>Senha inicial (gerada automaticamente)</label></div>
+    <div class="pwdbox" id="npb" onclick="this.select?this.select():window.getSelection().selectAllChildren(this)">${pwd}</div>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:10px">📋 Toque na senha para copiar e envie ao coordenador pelo WhatsApp.</p>
+    <button class="bsm bl" onclick="document.getElementById('npb').textContent=genPwd()" style="width:100%;justify-content:center;margin-bottom:14px">🔄 Gerar nova senha</button>
+    <button class="btn pu" onclick="saveNewCoord()">Criar coordenador</button>
+    <div style="height:8px"></div><button class="btn se" onclick="closeMod()">Cancelar</button>
+    <div id="nce" style="color:var(--red);font-size:13px;margin-top:8px;font-weight:600"></div>`);
+  setTimeout(()=>document.getElementById('ncn')?.focus(),200);
+}
+function saveNewCoord(){
+  const nome=document.getElementById('ncn').value.trim(),usuario=document.getElementById('ncu').value.trim().replace(/\s+/g,''),senha=document.getElementById('npb').textContent.trim(),cidade=document.getElementById('ncc').value.trim(),e=document.getElementById('nce');
+  if(!nome||!usuario){e.textContent='⚠️ Preencha nome e usuário.';return}
+  if(S.coords.find(c=>c.usuario===usuario)||usuario===AU){e.textContent='⚠️ Usuário já existe.';return}
+  const novoCoord={id:couid(),nome,usuario,senha,cidade,ativo:true,ts:Date.now()};
+  S.coords.push(novoCoord);
+  sv();
+  enviarCoordGAS(novoCoord);
+  closeMod();toast('✅ Coordenador "'+nome+'" criado!');rCoords();
+}
+function mEditCoord(id){
+  const c=S.coords.find(x=>x.id===id);if(!c)return;
+  openMod(`<h3 style="font-size:17px;font-weight:800;margin-bottom:14px">✏️ Editar coordenador</h3>
+    <div class="fld"><label>Nome *</label><input id="ecn" type="text" value="${c.nome}" style="width:100%;padding:12px 14px;border:1.5px solid var(--gray-border);border-radius:var(--radius-sm);font-size:15px"></div>
+    <div class="fld"><label>Usuário *</label><input id="ecu" type="text" value="${c.usuario}" style="width:100%;padding:12px 14px;border:1.5px solid var(--gray-border);border-radius:var(--radius-sm);font-size:15px"></div>
+    <div class="fld"><label>Cidade / Região</label><input id="ecc" type="text" value="${c.cidade||''}" style="width:100%;padding:12px 14px;border:1.5px solid var(--gray-border);border-radius:var(--radius-sm);font-size:15px"></div>
+    <button class="btn pr" onclick="saveEditCoord('${id}')">Salvar</button>
+    <div style="height:8px"></div><button class="btn se" onclick="closeMod()">Cancelar</button>
+    <div id="ece" style="color:var(--red);font-size:13px;margin-top:8px;font-weight:600"></div>`);
+}
+function saveEditCoord(id){
+  const nome=document.getElementById('ecn').value.trim(),usuario=document.getElementById('ecu').value.trim().replace(/\s+/g,''),cidade=document.getElementById('ecc').value.trim(),e=document.getElementById('ece');
+  if(!nome||!usuario){e.textContent='⚠️ Preencha nome e usuário.';return}
+  if((S.coords.find(c=>c.usuario===usuario&&c.id!==id))||usuario===AU){e.textContent='⚠️ Usuário já existe.';return}
+  const c=S.coords.find(x=>x.id===id);c.nome=nome;c.usuario=usuario;c.cidade=cidade;
+  sv();
+  enviarCoordGAS(c);
+  closeMod();toast('✅ Coordenador atualizado!');rCoords();
+}
+function mResetPwd(id){
+  const c=S.coords.find(x=>x.id===id);if(!c)return;
+  const pwd=genPwd();
+  openMod(`<h3 style="font-size:17px;font-weight:800;margin-bottom:4px">🔑 Nova senha</h3>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:14px">Coordenador: <strong>${c.nome}</strong></p>
+    <div class="pwdbox" id="rpb" onclick="this.select?this.select():window.getSelection().selectAllChildren(this)">${pwd}</div>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:10px">📋 Toque para copiar e envie pelo WhatsApp. Substitui a senha atual.</p>
+    <button class="bsm bl" onclick="document.getElementById('rpb').textContent=genPwd()" style="width:100%;justify-content:center;margin-bottom:14px">🔄 Gerar outra</button>
+    <button class="btn pu" onclick="applyPwd('${id}')">✅ Aplicar nova senha</button>
+    <div style="height:8px"></div><button class="btn se" onclick="closeMod()">Cancelar</button>`);
+}
+function applyPwd(id){
+  const nova=document.getElementById('rpb').textContent.trim(),c=S.coords.find(x=>x.id===id);if(!c)return;
+  c.senha=nova;sv();closeMod();toast('🔑 Senha de '+c.nome+' redefinida!');
+}
+function togCoord(id){
+  const c=S.coords.find(x=>x.id===id);if(!c)return;c.ativo=!c.ativo;sv();
+  toast(c.ativo?'✅ Coordenador ativado!':'🚫 Coordenador desativado.');rCoords();
+}
+function cfmDelCoord(id){
+  const c=S.coords.find(x=>x.id===id);if(!c)return;
+  const n=S.servos.filter(s=>s.coId===id).length;
+  openMod(`<h3 style="font-size:17px;font-weight:800;margin-bottom:10px;color:var(--red)">🗑 Excluir coordenador</h3>
+    <p style="font-size:14px;color:var(--text2);margin-bottom:${n?'10px':'20px'}">Excluir <strong>${c.nome}</strong> (@${c.usuario})?</p>
+    ${n?`<div style="background:var(--amber-light);color:var(--amber);padding:10px 14px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;margin-bottom:16px">⚠️ Os ${n} servos cadastrados por ele serão mantidos no sistema.</div>`:''}
+    <button class="btn da" onclick="delCoord('${id}')">🗑 Excluir</button>
+    <div style="height:8px"></div><button class="btn se" onclick="closeMod()">Cancelar</button>`);
+}
+function delCoord(id){S.coords=S.coords.filter(x=>x.id!==id);sv();closeMod();toast('🗑 Coordenador removido.');rCoords();}
+
+// SERVOS (ADMIN)
+function rAServos(){
+  const q=(document.getElementById('admin-search')?.value||'').toLowerCase().trim();
+  const el=document.getElementById('aservos');
+  const hdr=`<div class="sw"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" id="admin-search" placeholder="Buscar servo..." oninput="rAServos()"></div>`;
+  let list=S.servos.filter(s=>!q||s.nome.toLowerCase().includes(q)||nCid(s.cid).toLowerCase().includes(q));
+  if(!list.length){el.innerHTML=hdr+'<div class="empty"><p>Nenhum servo.</p></div>';return}
+  el.innerHTML=hdr+list.map(s=>{
+    const co=S.coords.find(c=>c.id===s.coId);
+    return`<div class="si" style="cursor:default">
+      <div class="sirow"><div class="av pu">${inits(s.nome)}</div>
+        <div style="flex:1;min-width:0"><div class="siname">${s.nome}</div>
+          <div class="sisub">${nCid(s.cid)} · ${s.grp||'—'} · ${fmtD(s.nasc)}</div>
+          ${co?`<div style="font-size:11px;color:var(--purple);font-weight:600;margin-top:2px">por ${co.nome}</div>`:''}
+        </div>
+        <div style="display:flex;gap:5px">
+          <button class="bsm bl" onclick="editServo('${s.id}')">✏️</button>
+          <button class="bsm rd" onclick="cfmDelServo('${s.id}',true)">🗑</button>
+        </div>
+      </div></div>`;}).join('');
+}
+function cfmDelServo(id,adm){
+  const s=S.servos.find(x=>x.id===id);if(!s)return;
+  openMod(`<h3 style="font-size:17px;font-weight:800;margin-bottom:10px;color:var(--red)">🗑 Excluir servo</h3>
+    <p style="font-size:14px;color:var(--text2);margin-bottom:20px">Excluir <strong>${s.nome}</strong>?<br>Ação irreversível.</p>
+    <button class="btn da" onclick="delServo('${id}',${adm})">🗑 Excluir</button>
+    <div style="height:8px"></div><button class="btn se" onclick="closeMod()">Cancelar</button>`);
+}
+function delServo(id,adm){
+  excluirServoGAS(id);
+  S.servos=S.servos.filter(x=>x.id!==id);sv();closeMod();toast('🗑 Servo removido.');
+  if(adm)rAServos();else go('servos');
+}
+
+// CIDADES (ADMIN)
+function rACids(){
+  document.getElementById('acidades').innerHTML=S.cids.map(c=>`
+    <div class="card pb">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span style="font-weight:800;font-size:15px">📍 ${c.nome}</span>
+        <span class="bdg bl">${S.servos.filter(s=>s.cid===c.id).length} servos</span>
+        <button class="bsm rd" style="margin-left:auto" onclick="cfmDelCid('${c.id}')">🗑 Excluir</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${c.grupos.map(g=>`<div style="display:flex;align-items:center;gap:4px;background:var(--gray-light);border-radius:10px;padding:3px 6px 3px 10px;font-size:12px;font-weight:600">🙏 ${g}<button onclick="cfmDelGrp('${c.id}','${g.replace(/'/g,"\\'")}') " style="background:var(--red-light);border:none;color:var(--red);border-radius:6px;cursor:pointer;padding:2px 6px;font-size:11px;font-weight:700">✕</button></div>`).join('')}
+        ${!c.grupos.length?'<span style="color:var(--text3);font-size:13px">Sem grupos</span>':''}
+      </div></div>`).join('');
+}
+function cfmDelCid(cid){
+  const c=S.cids.find(x=>x.id===cid);if(!c)return;
+  const n=S.servos.filter(s=>s.cid===cid).length;
+  openMod(`<h3 style="font-size:17px;font-weight:800;margin-bottom:10px;color:var(--red)">🗑 Excluir cidade</h3>
+    <p style="font-size:14px;color:var(--text2);margin-bottom:${n?'10px':'20px'}">Excluir <strong>${c.nome}</strong>?</p>
+    ${n?`<div style="background:var(--amber-light);color:var(--amber);padding:10px 14px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;margin-bottom:16px">⚠️ ${n} servo(s) também serão excluídos!</div>`:''}
+    <button class="btn da" onclick="delCid('${cid}')">🗑 Excluir</button>
+    <div style="height:8px"></div><button class="btn se" onclick="closeMod()">Cancelar</button>`);
+}
+function delCid(cid){S.servos=S.servos.filter(s=>s.cid!==cid);S.cids=S.cids.filter(c=>c.id!==cid);sv();closeMod();toast('🗑 Cidade removida.');rACids();}
+function cfmDelGrp(cid,grp){
+  openMod(`<h3 style="font-size:17px;font-weight:800;margin-bottom:10px;color:var(--red)">🗑 Excluir grupo</h3>
+    <p style="font-size:14px;color:var(--text2);margin-bottom:20px">Excluir <strong>${grp}</strong>?</p>
+    <button class="btn da" onclick="delGrp('${cid}','${grp.replace(/'/g,"\\'")}')">🗑 Excluir</button>
+    <div style="height:8px"></div><button class="btn se" onclick="closeMod()">Cancelar</button>`);
+}
+function delGrp(cid,grp){const c=S.cids.find(x=>x.id===cid);if(!c)return;c.grupos=c.grupos.filter(g=>g!==grp);sv();closeMod();toast('🗑 Grupo removido.');rACids();}
+
+// RELATÓRIO
+function rRelat(){
+  const el=document.getElementById('arelat'),total=S.servos.length;
+  el.innerHTML=`<div class="card">
+    <div class="ctitle"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Exportar dados completos</div>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:12px">Todos os servos de todos os coordenadores.</p>
+    <button class="btn pr" onclick="exportCSV(true,null)">📥 Baixar CSV completo (${total} servos)</button>
+  </div>
+  <div class="sec">Cadastros por coordenador</div>`+
+  S.coords.map(c=>{
+    const n=S.servos.filter(s=>s.coId===c.id).length;
+    const ult=S.servos.filter(s=>s.coId===c.id).sort((a,b)=>b.ts-a.ts)[0];
+    return`<div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <div class="av" style="width:36px;height:36px;font-size:13px">${inits(c.nome)}</div>
+        <div style="flex:1"><div style="font-weight:700">${c.nome}</div><div style="font-size:12px;color:var(--text3)">@${c.usuario} · ${c.cidade||'—'}</div></div>
+        <span class="bdg ${n?'bl':'gy'}">${n} servo${n!==1?'s':''}</span>
+      </div>
+      ${ult?`<div style="font-size:11px;color:var(--text3)">Último: ${fmtTS(ult.ts)} — <strong>${ult.nome}</strong></div>`:'<div style="font-size:11px;color:var(--text3)">Sem cadastros ainda</div>'}
+      ${n?`<div style="margin-top:8px"><button class="bsm bl" style="font-size:11px" onclick="exportCSV(false,'${c.id}')">📥 Exportar CSV deste coordenador</button></div>`:''}
+    </div>`;}).join('');
+}
+
+// MAIS
+function rMais(){
+  document.getElementById('mcids').innerHTML=S.cids.map(c=>`<div class="card">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-weight:800;font-size:15px">📍 ${c.nome}</span><span class="bdg bl" style="margin-left:auto">${S.servos.filter(s=>s.cid===c.id).length} servos</span></div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px">${c.grupos.map(g=>`<span style="background:var(--gray-light);color:var(--text2);padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600">🙏 ${g}</span>`).join('')||'<span style="color:var(--text3);font-size:13px">Sem grupos</span>'}</div>
+  </div>`).join('');
+}
+
+// CSV
+function exportCSV(todos,coId){
+  let lista=todos?S.servos:coId?S.servos.filter(s=>s.coId===coId):S.servos.filter(s=>s.coId===CU?.cid);
+  const hdr='Nome,Nascimento,Cidade,Grupo,Ministerios,SVE,Exp.Oracao,Introd.Dons,Mod.Basico,Formacoes Especificas,Coordenador,Data Cadastro';
+  const rows=lista.map(s=>{const co=S.coords.find(c=>c.id===s.coId);return[s.nome,fmtD(s.nasc),nCid(s.cid),s.grp,(s.mins||[]).map(m=>nMin(m)).join(';'),s.sve?'Sim':'Não',s.exp?'Sim':'Não',s.int?'Sim':'Não',s.mod?'Sim':'Não',(s.esps||[]).join(';'),co?co.nome:'—',s.ts?fmtTS(s.ts):'—'].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',');});
+  const csv='\uFEFF'+[hdr,...rows].join('\r\n');
+  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  Object.assign(document.createElement('a'),{href:url,download:'servos_rcc.csv'}).click();
+  URL.revokeObjectURL(url);toast('📥 CSV baixado!');
+}
+
+// SIMULAÇÃO
+function startSimForm(){simOn=true;document.getElementById('hdr').classList.add('sim');document.getElementById('simbar').classList.add('on');go('cadastro');}
+function stopSim(){simOn=false;document.getElementById('hdr').classList.remove('sim');if(CU?.isAdm)document.getElementById('hdr').classList.add('adm');document.getElementById('simbar').classList.remove('on');go('sim');}
+
+// MODAL
+function openMod(h){document.getElementById('mbody').innerHTML=h;document.getElementById('mover').classList.add('on');}
+function closeMod(e){if(!e||e.target===document.getElementById('mover'))document.getElementById('mover').classList.remove('on');}
+</script>
+</body>
+</html>
