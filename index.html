@@ -590,6 +590,7 @@ function saveGrpReg(cid){
   const n=document.getElementById('mgr').value.trim();
   if(!n){toast('⚠️ Informe o nome.');return}
   const c=S.cids.find(x=>x.id===cid);if(!c)return;
+  if(!Array.isArray(c.grupos))c.grupos=Object.values(c.grupos||{});
   if(c.grupos.includes(n)){toast('Grupo já existe!');closeMod();return}
   c.grupos.push(n);sv();fbSalvarCidade(c);
   const sel=document.getElementById('cn-grp'),o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);sel.value=n;
@@ -787,7 +788,8 @@ function saveGrp(cid){
   if(!n){toast('⚠️ Informe o nome.');return}
   const c=S.cids.find(x=>x.id===cid);if(!c)return;
   if(c.grupos.includes(n)){toast('Grupo já existe!');closeMod();return}
-  c.grupos.push(n);if(!simOn)sv();
+  if(!Array.isArray(c.grupos))c.grupos=Object.values(c.grupos||{});
+  c.grupos.push(n);if(!simOn){sv();fbSalvarCidade(c);}
   const sel=document.getElementById('fgrp'),o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);sel.value=n;
   closeMod();toast('✅ Grupo "'+n+'" adicionado!');
 }
@@ -1026,7 +1028,7 @@ function cfmDelGrp(cid,grp){
     <button class="btn da" onclick="delGrp('${cid}','${grp.replace(/'/g,"\\'")}')">🗑 Excluir</button>
     <div style="height:8px"></div><button class="btn se" onclick="closeMod()">Cancelar</button>`);
 }
-function delGrp(cid,grp){const c=S.cids.find(x=>x.id===cid);if(!c)return;c.grupos=c.grupos.filter(g=>g!==grp);sv();closeMod();toast('🗑 Grupo removido.');rACids();}
+function delGrp(cid,grp){const c=S.cids.find(x=>x.id===cid);if(!c)return;if(!Array.isArray(c.grupos))c.grupos=Object.values(c.grupos||{});c.grupos=c.grupos.filter(g=>g!==grp);sv();fbSalvarCidade(c);closeMod();toast('🗑 Grupo removido.');rACids();}
 
 // RELATÓRIO
 function rRelat(){
