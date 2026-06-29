@@ -458,9 +458,10 @@ function fbEscutarPublico(){
   db.ref('cidades').on('value',snap=>{
     const d=snap.val()||{};
     if(Object.keys(d).length){
-      S.cids=Object.values(d);
+      // Firebase converte arrays em objetos — normaliza grupos de volta para array
+      S.cids=Object.values(d).map(c=>({...c,grupos:Array.isArray(c.grupos)?c.grupos:Object.values(c.grupos||{})}));
       localStorage.setItem('rcc_cids',JSON.stringify(S.cids));
-      // Atualiza dropdown de cidade no formulário de cadastro de coordenador se estiver aberto
+      // Atualiza dropdown de cidade no formulário de cadastro se estiver aberto
       const regForm=document.getElementById('lp-cadastro');
       const cs=document.getElementById('cn-cid');
       if(regForm&&regForm.style.display!=='none'&&cs){
