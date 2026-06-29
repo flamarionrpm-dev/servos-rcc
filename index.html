@@ -132,7 +132,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .pills::-webkit-scrollbar{display:none}
 .pill{flex-shrink:0;padding:7px 14px;border-radius:20px;border:1.5px solid var(--gray-border);background:var(--white);font-size:13px;color:var(--text2);cursor:pointer;font-weight:600;white-space:nowrap}
 .pill.on{background:var(--blue);border-color:var(--blue);color:#fff}
-.mover{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:800;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.mover{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:960;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
 .mover.on{opacity:1;pointer-events:all}
 .modal{background:var(--white);border-radius:var(--radius) var(--radius) 0 0;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;padding:20px 16px 36px;transform:translateY(40px);transition:transform .25s}
 .mover.on .modal{transform:translateY(0)}
@@ -249,7 +249,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
   <!-- SERVOS -->
   <div class="scr" id="scr-servos">
     <div class="sw"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="search" id="sq" placeholder="Buscar nome, cidade ou grupo..." oninput="renderServos()">
+      <input type="search" id="sq" placeholder="Buscar nome, cidade ou grupo..." oninput="rServos()">
     </div>
     <div class="pills" id="fpills"></div>
     <div id="slist"></div>
@@ -689,6 +689,8 @@ function initForm(){
   cs.innerHTML='<option value="">Selecione a cidade</option>';
   S.cids.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.nome;cs.appendChild(o)});
   document.getElementById('fgrp').innerHTML='<option value="">Selecione o grupo</option>';
+  // Auto-fill coordinator's city and group to avoid re-entering every time
+  if(!editId&&!CU?.isAdm){const co=S.coords.find(c=>c.id===CU?.cid);if(co&&co.cidId){cs.value=co.cidId;updateGrps();if(co.grp)setTimeout(()=>{document.getElementById('fgrp').value=co.grp;},30);}}
   document.getElementById('fmins').innerHTML=MINS.map(m=>`<label class="cki" id="cm-${m.id}"><input type="checkbox" id="fm-${m.id}" value="${m.id}" onchange="ck('cm-${m.id}',this);rebAcc()"><span>${m.n}</span></label>`).join('');
   buildAcc([],[]);
   if(editId){
@@ -918,10 +920,10 @@ function mResetPwd(id){
 }
 function applyPwd(id){
   const nova=document.getElementById('rpb').textContent.trim(),c=S.coords.find(x=>x.id===id);if(!c)return;
-  c.senha=nova;sv();closeMod();toast('🔑 Senha de '+c.nome+' redefinida!');
+  c.senha=nova;sv();fbSalvarCoord(c);closeMod();toast('🔑 Senha de '+c.nome+' redefinida!');
 }
 function togCoord(id){
-  const c=S.coords.find(x=>x.id===id);if(!c)return;c.ativo=!c.ativo;sv();
+  const c=S.coords.find(x=>x.id===id);if(!c)return;c.ativo=!c.ativo;sv();fbSalvarCoord(c);
   toast(c.ativo?'✅ Coordenador ativado!':'🚫 Coordenador desativado.');rCoords();
 }
 function cfmDelCoord(id){
