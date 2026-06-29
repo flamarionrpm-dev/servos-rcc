@@ -411,6 +411,13 @@ function fbExcluirCoord(id){db.ref('coordenadores/'+id).remove().catch(e=>consol
 function fbSalvarCidade(cid){db.ref('cidades/'+cid.id).set(cid).catch(e=>console.warn(e));}
 function fbExcluirCidade(id){db.ref('cidades/'+id).remove().catch(e=>console.warn(e));}
 
+// ══ PLANILHA GOOGLE (organizada por cidade e grupo) ══
+const GAS_URL='SUA_URL_AQUI';
+function enviarParaPlanilha(dados){
+  if(!GAS_URL||GAS_URL==='SUA_URL_AQUI')return;
+  fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(dados)}).catch(e=>console.warn('Planilha:',e));
+}
+
 function fbEscutar(){
   if(!CU?.isAdm)return;
   db.ref('servos').on('value',snap=>{
@@ -430,13 +437,19 @@ function fbEscutar(){
     if(Object.keys(d).length){S.cids=Object.values(d);localStorage.setItem('rcc_cids',JSON.stringify(S.cids));}
   });
 }
-function enviarServoGAS(servo){fbSalvarServo(servo);}
-function excluirServoGAS(id){fbExcluirServo(id);}
+function enviarServoGAS(servo){
+  fbSalvarServo(servo);
+  enviarParaPlanilha({id:servo.id,nome:servo.nome,nasc:servo.nasc,cidNome:nCid(servo.cid),grp:servo.grp||'',minsNomes:(servo.mins||[]).map(m=>nMin(m)),sve:!!servo.sve,exp:!!servo.exp,int:!!servo.int,mod:!!servo.mod,esps:servo.esps||[],tel:servo.tel||'',email:servo.email||'',coNome:servo.coNome||'',ts:servo.ts||Date.now()});
+}
+function excluirServoGAS(id){
+  fbExcluirServo(id);
+  enviarParaPlanilha({action:'delete',id});
+}
 function enviarCoordGAS(coord){fbSalvarCoord(coord);}
 let S=ld(),CU=null,editId=null,curScr='home',fMin='',simOn=false,curAdmTab='c';
 const nCid=id=>(S.cids.find(c=>c.id===id)||{nome:'—'}).nome;
 const nMin=id=>(MINS.find(m=>m.id===id)||{n:id}).n;
-const inits=n=>n.trim().split(/\s+/).slice(0,2).map(x=>x[0]).toUpperCase().join('');
+const inits=n=>(n||'').trim().split(/\s+/).slice(0,2).map(x=>(x[0]||'')).join('').toUpperCase();
 const uid=()=>'s'+Date.now()+Math.random().toString(36).slice(2,5);
 const cuid=()=>'c'+Date.now();
 const couid=()=>'co'+Date.now();
