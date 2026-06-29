@@ -444,7 +444,7 @@ function fbSalvarCidade(cid){db.ref('cidades/'+cid.id).set(cid).catch(e=>console
 function fbExcluirCidade(id){db.ref('cidades/'+id).remove().catch(e=>console.warn(e));}
 
 // ══ PLANILHA GOOGLE (organizada por cidade e grupo) ══
-const GAS_URL='https://script.google.com/macros/s/AKfycbydC4GZ6AZHoXNDmbvwD_IzQfa4zSr2D3hAJq3qpnJ1kZuEpqdt0XRa4FI6VylSLzle/exec';
+const GAS_URL='https://script.google.com/macros/s/AKfycbwnBHZ_M1tIvqGq6FnkZzNtvSSrXcSKy7Nmh6kO4Xk-JG0demf_ApVHbX6EsCNVEyFR/exec';
 function enviarParaPlanilha(dados){
   if(!GAS_URL||GAS_URL==='SUA_URL_AQUI')return;
   fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(dados)}).catch(e=>console.warn('Planilha:',e));
