@@ -157,7 +157,7 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
 .stbdy{font-size:13px;color:var(--text3);margin-top:8px;line-height:1.6;padding-left:34px}
 .sttip{background:var(--amber-light);color:var(--amber);border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;font-weight:600;margin-top:8px;margin-left:34px}
 .pwdbox{background:var(--gray-light);border:2px dashed var(--gray-border);border-radius:var(--radius-sm);padding:14px 16px;font-family:monospace;font-size:20px;letter-spacing:3px;font-weight:700;color:var(--blue-dark);text-align:center;margin:10px 0;user-select:all;cursor:copy}
-.atabs{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+.atabs{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;scrollbar-width:thin;padding-bottom:6px}
 .atabs::-webkit-scrollbar{display:none}
 @media(min-width:500px){.app{border-left:1px solid #d0d5de;border-right:1px solid #d0d5de}}
 </style>
@@ -195,12 +195,12 @@ html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sa
       <input id="cn-nome" type="text" placeholder="Seu nome completo">
       <label>Cidade</label>
       <div style="display:flex;gap:6px">
-        <select id="cn-cid" onchange="updateGrpsReg()" style="flex:1;padding:12px 14px;border-radius:9px;border:1.5px solid rgba(255,255,255,.25);background:rgba(255,255,255,.15);color:#fff;font-size:15px"></select>
+        <select id="cn-cid" onchange="updateGrpsReg()" style="flex:1;padding:12px 14px;border-radius:9px;border:1.5px solid rgba(255,255,255,.35);background:rgba(0,10,60,.55);color:#fff;font-size:15px;appearance:none;-webkit-appearance:none"></select>
         <button type="button" onclick="mNewCidReg()" style="padding:0 14px;border-radius:9px;border:1.5px solid rgba(255,255,255,.3);background:rgba(255,255,255,.18);color:#fff;font-size:13px;font-weight:700;white-space:nowrap;cursor:pointer">+ Nova</button>
       </div>
       <label>Grupo de oração</label>
       <div style="display:flex;gap:6px">
-        <select id="cn-grp" style="flex:1;padding:12px 14px;border-radius:9px;border:1.5px solid rgba(255,255,255,.25);background:rgba(255,255,255,.15);color:#fff;font-size:15px"></select>
+        <select id="cn-grp" style="flex:1;padding:12px 14px;border-radius:9px;border:1.5px solid rgba(255,255,255,.35);background:rgba(0,10,60,.55);color:#fff;font-size:15px;appearance:none;-webkit-appearance:none"></select>
         <button type="button" onclick="mNewGrpReg()" style="padding:0 14px;border-radius:9px;border:1.5px solid rgba(255,255,255,.3);background:rgba(255,255,255,.18);color:#fff;font-size:13px;font-weight:700;white-space:nowrap;cursor:pointer">+ Novo</button>
       </div>
       <label>Usuário (para fazer login)</label>
@@ -457,7 +457,18 @@ function fbEscutarPublico(){
   });
   db.ref('cidades').on('value',snap=>{
     const d=snap.val()||{};
-    if(Object.keys(d).length){S.cids=Object.values(d);localStorage.setItem('rcc_cids',JSON.stringify(S.cids));}
+    if(Object.keys(d).length){
+      S.cids=Object.values(d);
+      localStorage.setItem('rcc_cids',JSON.stringify(S.cids));
+      // Atualiza dropdown de cidade no formulário de cadastro de coordenador se estiver aberto
+      const regForm=document.getElementById('lp-cadastro');
+      const cs=document.getElementById('cn-cid');
+      if(regForm&&regForm.style.display!=='none'&&cs){
+        const val=cs.value;
+        cs.innerHTML='<option value="">Selecione a cidade</option>'+S.cids.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
+        if(val)cs.value=val;
+      }
+    }
   });
 }
 function fbEscutar(){
@@ -469,6 +480,16 @@ function fbEscutar(){
     if(curScr==='home')rHome();
     if(curScr==='servos')rServos();
     if(curScr==='admin')atab(curAdmTab);
+  });
+}
+function fbEscutarCoord(){
+  if(CU?.isAdm)return;
+  db.ref('servos').on('value',snap=>{
+    const d=snap.val()||{};
+    S.servos=Object.values(d).filter(s=>s.coId===CU?.cid);
+    localStorage.setItem('rcc_servos',JSON.stringify(S.servos));
+    if(curScr==='home')rHome();
+    if(curScr==='servos')rServos();
   });
 }
 function enviarServoGAS(servo){
@@ -512,7 +533,7 @@ function openApp(){
   document.getElementById('hsub').textContent=CU.isAdm?'🔐 Administrador':'👤 '+CU.nome;
   if(CU.isAdm){document.getElementById('hdr').classList.add('adm');setAdmNav();}
   go('home');toast('Bem-vindo, '+CU.nome+'! 🙏');
-  if(CU.isAdm) fbEscutar();
+  if(CU.isAdm) fbEscutar(); else fbEscutarCoord();
 }
 // CADASTRO DE COORDENADOR (autoatendimento, antes do login)
 function showLoginTab(t){
@@ -912,14 +933,17 @@ function mResetPwd(id){
   const pwd=genPwd();
   openMod(`<h3 style="font-size:17px;font-weight:800;margin-bottom:4px">🔑 Nova senha</h3>
     <p style="font-size:13px;color:var(--text3);margin-bottom:14px">Coordenador: <strong>${c.nome}</strong></p>
-    <div class="pwdbox" id="rpb" onclick="this.select?this.select():window.getSelection().selectAllChildren(this)">${pwd}</div>
-    <p style="font-size:12px;color:var(--text3);margin-bottom:10px">📋 Toque para copiar e envie pelo WhatsApp. Substitui a senha atual.</p>
-    <button class="bsm bl" onclick="document.getElementById('rpb').textContent=genPwd()" style="width:100%;justify-content:center;margin-bottom:14px">🔄 Gerar outra</button>
+    <div class="fld"><label>Digite a nova senha *</label>
+    <input id="rpb" type="text" value="${pwd}" placeholder="Digite a senha desejada" style="width:100%;padding:12px 14px;border:1.5px solid var(--gray-border);border-radius:var(--radius-sm);font-size:16px;font-weight:700;letter-spacing:1px"></div>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:10px">💡 Você pode digitar a senha que quiser ou usar a sugestão acima.</p>
+    <button class="bsm bl" onclick="document.getElementById('rpb').value=genPwd()" style="width:100%;justify-content:center;margin-bottom:14px">🔄 Gerar sugestão aleatória</button>
     <button class="btn pu" onclick="applyPwd('${id}')">✅ Aplicar nova senha</button>
     <div style="height:8px"></div><button class="btn se" onclick="closeMod()">Cancelar</button>`);
+  setTimeout(()=>document.getElementById('rpb')?.focus(),200);
 }
 function applyPwd(id){
-  const nova=document.getElementById('rpb').textContent.trim(),c=S.coords.find(x=>x.id===id);if(!c)return;
+  const nova=document.getElementById('rpb').value.trim(),c=S.coords.find(x=>x.id===id);if(!c)return;
+  if(!nova){toast('⚠️ Digite uma senha.');return}
   c.senha=nova;sv();fbSalvarCoord(c);closeMod();toast('🔑 Senha de '+c.nome+' redefinida!');
 }
 function togCoord(id){
