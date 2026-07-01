@@ -744,11 +744,12 @@ function initForm(){
 }
 function buildAcc(ms,es){
   document.getElementById('facc').innerHTML=MINS.map(m=>{
-    const fs=FMIN[m.id]||[],sel=ms.includes(m.id),cnt=es.filter(e=>fs.includes(e)).length;
+    const fs=FMIN[m.id]||[],sel=ms.includes(m.id);
+    const cnt=fs.filter(f=>es.includes(m.id+'||'+f)).length;
     return`<div class="acc-blk"><div class="acc-hdr ${sel?'on':''}" onclick="tAcc('${m.id}')"><span>${m.n}${cnt?`<span class="acnt">${cnt}</span>`:''}</span><span class="chev" id="chev-${m.id}">▾</span></div>
     <div class="acc-bd" id="abdy-${m.id}"><div class="ckg" style="margin-top:4px">
-      ${fs.map((f,i)=>{const fid=`ef-${m.id}-${i}`,ck2=es.includes(f);
-        return`<label class="cki ${ck2?'on':''}" id="ci-${fid}"><input type="checkbox" id="${fid}" value="${f}" ${ck2?'checked':''} onchange="ck('ci-${fid}',this)"><span>${f}</span></label>`;}).join('')}
+      ${fs.map((f,i)=>{const fid=`ef-${m.id}-${i}`,key=m.id+'||'+f,ck2=es.includes(key);
+        return`<label class="cki ${ck2?'on':''}" id="ci-${fid}"><input type="checkbox" id="${fid}" value="${key}" ${ck2?'checked':''} onchange="ck('ci-${fid}',this)"><span>${f}</span></label>`;}).join('')}
     </div></div></div>`;}).join('');
 }
 function rebAcc(){buildAcc([...document.querySelectorAll('#fmins input:checked')].map(x=>x.value),[...document.querySelectorAll('#facc input:checked')].map(x=>x.value));}
@@ -787,8 +788,8 @@ function saveGrp(cid){
   const n=document.getElementById('mg').value.trim();
   if(!n){toast('⚠️ Informe o nome.');return}
   const c=S.cids.find(x=>x.id===cid);if(!c)return;
-  if(c.grupos.includes(n)){toast('Grupo já existe!');closeMod();return}
   if(!Array.isArray(c.grupos))c.grupos=Object.values(c.grupos||{});
+  if(c.grupos.includes(n)){toast('Grupo já existe!');closeMod();return}
   c.grupos.push(n);if(!simOn){sv();fbSalvarCidade(c);}
   const sel=document.getElementById('fgrp'),o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);sel.value=n;
   closeMod();toast('✅ Grupo "'+n+'" adicionado!');
@@ -799,7 +800,8 @@ function saveServo(){
   if(simOn){toast('🎓 Perfeito! Em modo real o servo seria salvo agora.');clearForm();return}
   const mins=[...document.querySelectorAll('#fmins input:checked')].map(x=>x.value);
   const esps=[...document.querySelectorAll('#facc input:checked')].map(x=>x.value);
-  const servo={id:editId||uid(),nome,nasc,cid,grp,tel:document.getElementById('ftel').value,email:document.getElementById('femail').value,mins,sve:document.getElementById('fsve').checked,exp:document.getElementById('fexp').checked,int:document.getElementById('fint').checked,mod:document.getElementById('fmod').checked,esps,coId:CU?.cid||'admin',coNome:CU?.nome||'Administrador',ts:editId?(S.servos.find(x=>x.id===editId)||{}).ts||Date.now():Date.now(),tsUp:Date.now()};
+  const _orig=editId?(S.servos.find(x=>x.id===editId)||{}):null;
+  const servo={id:editId||uid(),nome,nasc,cid,grp,tel:document.getElementById('ftel').value,email:document.getElementById('femail').value,mins,sve:document.getElementById('fsve').checked,exp:document.getElementById('fexp').checked,int:document.getElementById('fint').checked,mod:document.getElementById('fmod').checked,esps,coId:_orig?.coId||CU?.cid||'admin',coNome:_orig?.coNome||CU?.nome||'Administrador',ts:_orig?.ts||Date.now(),tsUp:Date.now()};
   if(editId){const i=S.servos.findIndex(x=>x.id===editId);if(i>=0)S.servos[i]=servo;editId=null;}
   else S.servos.push(servo);
   sv();
@@ -822,7 +824,7 @@ function editServo(id){editId=id;document.getElementById('bnav').style.display='
 function showDet(id){
   const s=S.servos.find(x=>x.id===id);if(!s)return;
   const sc=fsc(s),co=S.coords.find(c=>c.id===s.coId);
-  const espH=MINS.map(m=>{const f=(s.esps||[]).filter(e=>(FMIN[m.id]||[]).includes(e));if(!f.length)return'';return`<div style="margin-bottom:10px"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:5px">${m.n}</div><div style="display:flex;flex-wrap:wrap;gap:5px">${f.map(x=>`<span class="bdg bl" style="font-size:10px">${x}</span>`).join('')}</div></div>`;}).join('');
+  const espH=MINS.map(m=>{const fs=FMIN[m.id]||[];const f=fs.filter(fn=>(s.esps||[]).includes(m.id+'||'+fn));if(!f.length)return'';return`<div style="margin-bottom:10px"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:5px">${m.n}</div><div style="display:flex;flex-wrap:wrap;gap:5px">${f.map(x=>`<span class="bdg bl" style="font-size:10px">${x}</span>`).join('')}</div></div>`;}).join('');
   document.getElementById('scr-det').innerHTML=`
     <div class="dh"><div class="dav">${inits(s.nome)}</div><div class="dname">${s.nome}</div><div class="dsub">${nCid(s.cid)} · ${s.grp||'—'}</div></div>
     <div class="card">
@@ -1021,7 +1023,7 @@ function cfmDelCid(cid){
     <button class="btn da" onclick="delCid('${cid}')">🗑 Excluir</button>
     <div style="height:8px"></div><button class="btn se" onclick="closeMod()">Cancelar</button>`);
 }
-function delCid(cid){S.servos.filter(s=>s.cid===cid).forEach(s=>fbExcluirServo(s.id));fbExcluirCidade(cid);S.servos=S.servos.filter(s=>s.cid!==cid);S.cids=S.cids.filter(c=>c.id!==cid);sv();closeMod();toast('🗑 Cidade removida.');rACids();}
+function delCid(cid){S.servos.filter(s=>s.cid===cid).forEach(s=>excluirServoGAS(s.id));fbExcluirCidade(cid);S.servos=S.servos.filter(s=>s.cid!==cid);S.cids=S.cids.filter(c=>c.id!==cid);sv();closeMod();toast('🗑 Cidade removida.');rACids();}
 function cfmDelGrp(cid,grp){
   openMod(`<h3 style="font-size:17px;font-weight:800;margin-bottom:10px;color:var(--red)">🗑 Excluir grupo</h3>
     <p style="font-size:14px;color:var(--text2);margin-bottom:20px">Excluir <strong>${grp}</strong>?</p>
